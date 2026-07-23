@@ -1,172 +1,226 @@
-# Task Tracker API
+﻿# Task Tracker API
 
-A small backend service built to practice and demonstrate core Python backend skills:
-FastAPI, REST APIs, JWT authentication, relational databases via SQLAlchemy, and
-cloud deployment. Deploy free to **Render** with file storage on **Backblaze B2**.
+A production-ready full-stack Task Tracker application built with **FastAPI**, **React**, **PostgreSQL/SQLite**, **JWT Authentication**, **Docker**, and **Backblaze B2** cloud storage.
+
+This project demonstrates secure authentication, RESTful API development, CRUD operations, cloud file storage, and containerized deployment.
+
+---
 
 ## Features
 
-- User registration, login, and session-based JWT authentication (`/auth`)
-- Full CRUD on tasks, scoped per logged-in user (`/tasks`)
-- React-based real-time task dashboard available at `/dashboard`
-- File attachment upload to Backblaze B2, linked to a task
-- Works with SQLite locally (zero setup) and PostgreSQL in production —
-  just change one environment variable
-- `/health` endpoint for load balancer / health checks
-- Interactive API docs auto-generated at `/docs` (Swagger UI)
+- Secure user registration and login
+- JWT authentication using HttpOnly cookies
+- Protected routes with automatic session management
+- Full CRUD operations for task management
+- User-specific task isolation
+- React dashboard with automatic login and session restoration
+- File upload support using Backblaze B2 (S3-compatible)
+- SQLite for local development and PostgreSQL for production
+- Dockerized deployment
+- Interactive Swagger API documentation
+- Health check endpoint (`/health`)
+
+---
 
 ## Tech Stack
 
-| Layer          | Choice                              |
-|----------------|--------------------------------------|
-| Framework      | FastAPI                              |
-| Database       | SQLite (dev) / PostgreSQL (prod) via SQLAlchemy |
-| Auth           | JWT (python-jose) + bcrypt password hashing |
-| File storage   | Backblaze B2 (S3-compatible API)     |
-| Deployment     | Docker container on Render           |
+| Category | Technology |
+|----------|------------|
+| Backend | FastAPI, Python |
+| Frontend | React, Vite, Tailwind CSS |
+| Database | SQLite, PostgreSQL |
+| ORM | SQLAlchemy |
+| Authentication | JWT, bcrypt |
+| Cloud Storage | Backblaze B2 (S3-Compatible) |
+| Deployment | Docker, Render |
+| API Documentation | Swagger UI |
+
+---
 
 ## Project Structure
 
-```
+```text
 app/
-  main.py          # FastAPI app, router registration
-  database.py       # SQLAlchemy engine/session (SQLite or Postgres via DATABASE_URL)
-  models.py          # User, Task ORM models
-  schemas.py          # Pydantic request/response models
-  security.py          # password hashing, JWT create/verify
-  deps.py                # get_current_user dependency (JWT -> User)
-  s3.py                    # S3 upload helper
-  routers/
-    auth.py                # /auth/register, /auth/login
-    tasks.py                # /tasks CRUD + attachment upload
+├── main.py
+├── database.py
+├── models.py
+├── schemas.py
+├── security.py
+├── deps.py
+├── s3.py
+└── routers/
+    ├── auth.py
+    └── tasks.py
+
+frontend/
 Dockerfile
 requirements.txt
 .env.example
 ```
 
-## Run locally
+---
+
+## Local Setup
+
+### Clone the repository
 
 ```bash
-python -m venv venv && source venv/bin/activate
+git clone https://github.com/<your-username>/task-tracker-fastapi.git
+cd task-tracker-fastapi
+```
+
+### Create a virtual environment
+
+```bash
+python -m venv venv
+```
+
+### Activate the environment
+
+Windows
+
+```bash
+venv\Scripts\activate
+```
+
+Linux/macOS
+
+```bash
+source venv/bin/activate
+```
+
+### Install dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-### Run backend
+### Start the backend
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-### Run the React dashboard
+Backend:
 
-Install frontend dependencies once and build the app:
+```
+http://127.0.0.1:8000
+```
+
+Swagger Docs:
+
+```
+http://127.0.0.1:8000/docs
+```
+
+Dashboard:
+
+```
+http://127.0.0.1:8000/dashboard/
+```
+
+---
+
+## Frontend Development
 
 ```bash
 cd frontend
 npm install
-npm run build
-```
-
-Then start the backend:
-
-```bash
-cd ..
-uvicorn app.main:app --reload
-```
-
-Open the React dashboard in your browser at:
-
-```bash
-http://127.0.0.1:8000/dashboard/
-```
-
-For local frontend development with Vite:
-
-```bash
-cd frontend
 npm run dev
 ```
 
-Then open the development app at:
+Development URL:
 
-```bash
-http://localhost:4173
+```
+http://localhost:5173
 ```
 
-The dashboard now uses a modern email/password login flow and stores the JWT in an HttpOnly cookie. The frontend automatically restores the session on reload and protects dashboard, tasks, profile, and settings routes without requiring any manual token entry. If you do not yet have an account, use the sign-up page in the dashboard to create one.
-
-Open http://127.0.0.1:8000/docs for interactive Swagger docs.
-### Try it with curl
-
-```bash
-# Register
-curl -X POST http://127.0.0.1:8000/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"you@example.com","password":"yourpassword"}'
-
-# Login (note: form-encoded, not JSON - OAuth2 password flow)
-curl -X POST http://127.0.0.1:8000/auth/login \
-  -d "username=you@example.com&password=yourpassword"
-
-# Create a task (replace TOKEN with the access_token from login)
-curl -X POST http://127.0.0.1:8000/tasks/ \
-  -H "Authorization: Bearer TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Learn FastAPI","description":"Finish the tutorial"}'
-```
+---
 
 ## Run with Docker
 
+Build:
+
 ```bash
 docker build -t task-tracker-api .
+```
+
+Run:
+
+```bash
 docker run -p 8000:8000 --env-file .env task-tracker-api
 ```
 
-## Deploying to Render + Backblaze B2 (free, no card required)
+---
 
-### 1. Set up Backblaze B2
+## Environment Variables
 
-1. Sign up for [Backblaze B2](https://www.backblaze.com/b2/cloud-storage.html) (free tier: 10GB storage)
-2. Create a bucket for attachments
-3. Create an Application Key with permissions for that bucket
-4. Note down:
-   - `B2_BUCKET_NAME`
-   - `B2_APPLICATION_KEY_ID`
-   - `B2_APPLICATION_KEY`
+Create a `.env` file.
 
-### 2. Create Render Web Service
+```env
+SECRET_KEY=your_secret_key
 
-1. Push this repo to GitHub (Render reads from GitHub)
-2. Go to [Render Dashboard](https://dashboard.render.com/)
-3. Click **New** → **Web Service**
-4. Select your GitHub repo
-5. Fill in the config:
-   - **Name**: `task-tracker-api`
-   - **Root Directory**: (leave blank)
-   - **Runtime**: `Docker`
-   - **Plan**: `Free` (optional: $7/month to keep it always running)
-6. Under **Environment**, add these variables:
-   ```
-   SECRET_KEY=<generate a long random string>
-   DATABASE_URL=sqlite:///./tasktracker.db
-   B2_BUCKET_NAME=<your B2 bucket name>
-   B2_APPLICATION_KEY_ID=<your B2 key ID>
-   B2_APPLICATION_KEY=<your B2 key>
-   B2_ENDPOINT_URL=https://s3.us-west-000.backblazeb2.com
-   ```
-   (Or use a Render PostgreSQL instance for `DATABASE_URL` if you prefer)
-7. Click **Create Web Service**
-8. Done! Your API is live at `https://<your-service-name>.onrender.com`
+DATABASE_URL=sqlite:///./tasktracker.db
 
-### Alternative: Use render.yaml for one-click deploy
+B2_BUCKET_NAME=your_bucket_name
+B2_APPLICATION_KEY_ID=your_key_id
+B2_APPLICATION_KEY=your_application_key
+B2_ENDPOINT_URL=https://s3.us-east-005.backblazeb2.com
+```
 
-We've included a `render.yaml` file. Just push to GitHub and click **Deploy** on Render
-— it auto-configures services and environment variables from the file.
+---
 
-## Notes on scope
+## Deployment
 
-This was built as a portfolio/practice project to get hands-on with the stack
-above, not a production system — there's no rate limiting, refresh tokens, or
-automated test suite yet. Natural next steps: add pytest coverage, a CI/CD
-pipeline (GitHub Actions building the Docker image and deploying to EC2), and
-refresh-token rotation.
+The application can be deployed using:
+
+- Render
+- Docker
+- Backblaze B2
+- PostgreSQL
+
+---
+
+## API Endpoints
+
+### Authentication
+
+- POST `/auth/register`
+- POST `/auth/login`
+- POST `/auth/logout`
+- GET `/auth/me`
+
+### Tasks
+
+- GET `/tasks`
+- POST `/tasks`
+- PUT `/tasks/{id}`
+- DELETE `/tasks/{id}`
+
+### System
+
+- GET `/health`
+
+---
+
+## Future Improvements
+
+- Refresh Token Authentication
+- Role-Based Access Control (RBAC)
+- Email Verification
+- Password Reset
+- GitHub Actions CI/CD
+- AWS EC2 Deployment
+- AWS S3 Integration
+- AWS RDS Deployment
+- Unit & Integration Testing
+
+---
+
+## Author
+
+**Monalisa Mondal**
+
+B.Sc. Data Science Student
+
+Python Backend Developer | FastAPI | React | PostgreSQL | Docker | REST APIs
