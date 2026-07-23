@@ -45,7 +45,7 @@ def login(
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         expires=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="lax",
+        samesite="none",
         secure=COOKIE_SECURE,
         path="/",
     )

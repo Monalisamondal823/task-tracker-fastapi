@@ -28,6 +28,8 @@ origins = [
     "http://127.0.0.1:4173",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+
+    "https://task-tracker-fastapi-h6ee3ihir-monalisamondal823s-projects.vercel.app",
 ]
 app.add_middleware(
     CORSMiddleware,
