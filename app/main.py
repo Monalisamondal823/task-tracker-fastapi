@@ -38,6 +38,8 @@ app.add_middleware(
 )
 
 frontend_dist = Path(__file__).resolve().parents[1] / "frontend" / "dist"
+print("Frontend dist path:", frontend_dist)
+print("Frontend exists:", frontend_dist.exists())
 if frontend_dist.exists():
     app.mount(
         "/dashboard/assets",
