@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: task-tracker-api
+    runtime: docker
+    region: oregon
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: SECRET_KEY
+        scope: run
+        isFile: false
+      - key: DATABASE_URL
+        value: sqlite:///./tasktracker.db
+        scope: run
+        isFile: false
+      - key: B2_BUCKET_NAME
+        scope: run
+        isFile: false
+      - key: B2_APPLICATION_KEY_ID
+        scope: run
+        isFile: false
+      - key: B2_APPLICATION_KEY
+        scope: run
+        isFile: false
+      - key: B2_ENDPOINT_URL
+        value: https://s3.us-west-000.backblazeb2.com
+        scope: run
+        isFile: false
